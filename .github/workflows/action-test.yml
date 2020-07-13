@@ -41,8 +41,8 @@ jobs:
 
             # those are some empty, empty lines
           SECRET_TEST: |
-            master: ${{ secrets.TEST_SECRET }}
-            !default: ${{ secrets.TEST_SECRET}} but its default
+            master:${{ secrets.TEST_SECRET }}
+            !default:${{ secrets.TEST_SECRET}} but its default
           STATIC_TEST: 'just a static env var here'
 
       - name: Print out those variables!
