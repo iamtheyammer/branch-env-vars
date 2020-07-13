@@ -1,7 +1,9 @@
 name: 'Branch-based environment variables that rock'
-icon: 'git-branch'
+branding:
+  icon: 'git-branch'
+  color: 'black'
 description: |
-  An easy way to set envronment variables based on the building branch
+  An easy way to set envronment variables based on the building branch. Make sure to check out the full README for instructions.
 inputs:
   bevOverwrite:
     description: 'Overwrite other, already-set environment variables with the same name'
