@@ -1,0 +1,20 @@
+name: 'Branch-based environment variables'
+description: |
+  An easy way to set envronment variables based on the building branch
+inputs:
+  bevOverwrite:
+    description: 'Overwrite other, already-set environment variables with the same name'
+    default: true
+    required: false
+  bevActionOnNoRef:
+    description: |
+      What to do when there is no GITHUB_REF: 'error' (fail the build), 'warn' (print a warning but pass), 'continue' (pass and continue silently)
+    default: warn
+    required: false
+  bevSetEmptyVars:
+    description: 'Whether to set an environment variable to an empty string if no value is provided'
+    default: true
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

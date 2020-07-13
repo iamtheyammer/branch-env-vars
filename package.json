@@ -1,0 +1,21 @@
+{
+  "name": "branch-env-vars",
+  "version": "1.0.0",
+  "description": "An easy way to set environment variables based on the building branch",
+  "main": "src/index.js",
+  "repository": "https://github.com/iamtheyammer/branch-env-vars",
+  "author": "iamtheyammer <iamtheyammer@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "ncc build src/index.js",
+    "format": "prettier --write \"src/**/*.js\""
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.4"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.22.3",
+    "prettier": "^2.0.5"
+  }
+}

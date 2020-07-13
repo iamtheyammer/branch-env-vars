@@ -1,0 +1,39 @@
+name: Action Test
+
+on: [push]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set some branch-based environment variables
+      uses: ./
+      with:
+        KITCHEN_SINK: |
+          master:value for KITCHEN_SINK on the master branch
+          test-branch: value for KITCHEN_SINK on test-branch
+          !pr:KITCHEN_SINK value for a pull request
+          !tag:KITCHEN_SINK value for a tag
+          !default:default value for KITCHEN_SINK
+        COMMENT_EMPTY_LINE_TEST: |
+          !default: COMMENT_EMPTY_LINE_TEST
+          # this is a comment
+
+
+          # those are some empty, empty lines
+        SECRET_TEST: |
+          master: ${{ secrets.TEST_SECRET }}
+          !default: ${{ secrets.TEST_SECRET}} but its default
+        STATIC_TEST: 'just a static env var here'
+
+    - name: Print out those variables!
+      run: |
+        echo "KITCHEN_SINK: $KITCHEN_SINK"
+        echo "COMMENT_EMPTY_LINE_TEST: $COMMENT_EMPTY_LINE_TEST"
+        echo "SECRET_TEST: $SECRET_TEST"
+        echo "STATIC_TEST: $STATIC_TEST"
