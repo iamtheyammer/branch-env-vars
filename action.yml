@@ -3,7 +3,7 @@ branding:
   icon: 'git-branch'
   color: 'black'
 description: |
-  An easy way to set envronment variables based on the building branch. Make sure to check out the full README for instructions.
+  An easy way to set envronment variables based on the building branch. Check out the full README for instructions.
 inputs:
   bevOverwrite:
     description: 'Overwrite other, already-set environment variables with the same name'
