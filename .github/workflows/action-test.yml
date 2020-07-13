@@ -20,8 +20,9 @@ jobs:
         with:
           node-version: ${{ env.PROJECT_NODE_VERSION }}
 
-      - name: Compile code
+      - name: Install dependencies and compile code
         run: |
+          yarn install
           yarn build
 
       - name: Set some branch-based environment variables
