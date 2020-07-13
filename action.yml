@@ -1,4 +1,5 @@
-name: 'Branch-based environment variables'
+name: 'Branch-based environment variables that rock'
+icon: 'git-branch'
 description: |
   An easy way to set envronment variables based on the building branch
 inputs:
