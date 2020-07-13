@@ -35,7 +35,7 @@ jobs:
             !tag:KITCHEN_SINK value for a tag
             !default:default value for KITCHEN_SINK
           COMMENT_EMPTY_LINE_TEST: |
-            !default: COMMENT_EMPTY_LINE_TEST
+            !default:COMMENT_EMPTY_LINE_TEST
             # this is a comment
 
 

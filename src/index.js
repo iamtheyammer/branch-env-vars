@@ -1,6 +1,10 @@
 import * as core from "@actions/core";
 
-const protectedEnvVars = ["INPUT_BEVOVERWRITE"];
+const protectedEnvVars = [
+  "INPUT_BEVOVERWRITE",
+  "INPUT_BEFACTIONONNOREF",
+  "BEFSETEMPTYVARS",
+];
 
 let canOverwrite;
 let noRefAction;
