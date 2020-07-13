@@ -2,9 +2,9 @@ import * as core from "@actions/core";
 
 const protectedEnvVars = ["INPUT_BEVOVERWRITE"];
 
-const canOverwrite = core.getInput("bevOverwrite") === "true";
-const noRefAction = core.getInput("bevActionOnNoRef");
-const setEmptyVars = core.getInput("bevSetEmptyVars") === "true";
+let canOverwrite;
+let noRefAction;
+let setEmptyVars;
 
 function parseBranchName(ref) {
   if (!ref) {
@@ -103,6 +103,10 @@ function parseEnvVarPossibilities(envVars) {
 }
 
 try {
+  canOverwrite = core.getInput("bevOverwrite") === "true";
+  noRefAction = core.getInput("bevActionOnNoRef");
+  setEmptyVars = core.getInput("bevSetEmptyVars") === "true";
+
   const ref = process.env.GITHUB_REF;
   const branchName = parseBranchName(ref);
 
