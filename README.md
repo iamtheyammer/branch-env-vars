@@ -117,6 +117,8 @@ If we are building anything else, like a branch, the value will be `valueforanyt
 
 In the above example, the value for `EXAMPLE` will always be `staticvalueforEXAMPLE`.
 
+Note that static variables may not have line breaks.
+
 #### Comments and empty lines
 
 ```yaml
