@@ -30,7 +30,7 @@ jobs:
         with:
           KITCHEN_SINK: |
             master:value for KITCHEN_SINK on the master branch
-            test-branch: value for KITCHEN_SINK on test-branch
+            test-branch:value for KITCHEN_SINK on test-branch
             !pr:KITCHEN_SINK value for a pull request
             !tag:KITCHEN_SINK value for a tag
             !default:default value for KITCHEN_SINK
