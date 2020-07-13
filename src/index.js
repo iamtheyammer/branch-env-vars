@@ -58,7 +58,7 @@ function parseEnvVarPossibilities(envVars) {
     )
     .map(([name, value]) => {
       // name of the environment variable
-      const transformedName = name.replace("INPUT_", "").toLowerCase();
+      const transformedName = name.replace("INPUT_", "").toUpperCase();
 
       // handle static environment variables
       if (!value.includes("\n")) {
