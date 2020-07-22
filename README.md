@@ -12,7 +12,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
 
 ```yaml
 - name: Set branch-based environment variables
-  uses: iamtheyammer/branch-env-vars@v1.0.0
+  uses: iamtheyammer/branch-env-vars@v1.0.1
   with:
     # optional, just an example of setting a setting
     bevOverwrite: true
@@ -135,3 +135,65 @@ Note that static variables may not have line breaks.
 Like YAML, comments are prefixed with a `#`.
 
 Empty lines are not evaluated.
+
+## Common Issues
+
+### Variable value has branch name in it
+
+```yaml
+- name: Set branch-based environment variables
+  uses: iamtheyammer/branch-env-vars@...
+  with:
+    EXAMPLE: 'master:valueformaster'
+```
+
+The value of `EXAMPLE` in the above code is `master:valueformaster`.
+
+This is happening because you're using a static variable declaration (single line).
+Switch to multi-line YAML for this to make it work.
+
+```yaml
+- name: Set branch-based environment variables
+  uses: iamtheyammer/branch-env-vars@...
+  with:
+    EXAMPLE: |
+      master:valueformaster
+```
+
+The value of `EXAMPLE` is now `valueformaster`.
+
+This happens because we use the presence of a line break to detect static environment variables.
+YAML automatically appends a line break to multi-line strings, so every multi-line declaration is non-static.
+
+```yaml
+- name: Set branch-based environment variables
+  uses: iamtheyammer/branch-env-vars@...
+  with:
+    EXAMPLE: |
+      master:valueformaster
+    SOMETHING_ELSE: |
+    	master:somethingelse
+        staging:somethingelsestaging
+
+```
+
+The above YAML converts to the following JSON, where you can see the line breaks.
+
+```json
+[
+  {
+    "name": "Set branch-based environment variables",
+    "uses": "iamtheyammer/branch-env-vars@...",
+    "with": {
+      "EXAMPLE": "master:valueformaster\n",
+      "SOMETHING_ELSE": "master:somethingelse\nstaging:somethingelsestaging\n"
+    }
+  }
+]
+```
+
+If you're still having this issue with a multiline declaration, make there's a newline after your last character in the multi-line declaration.
+
+### Warning: Unexpected input(s) 'YOUR_VAR_NAME', ...
+
+This warning is caused by the way GitHub parses `with` data. Don't worry about it.
