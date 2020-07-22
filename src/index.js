@@ -2,8 +2,8 @@ import * as core from "@actions/core";
 
 const protectedEnvVars = [
   "INPUT_BEVOVERWRITE",
-  "INPUT_BEFACTIONONNOREF",
-  "BEFSETEMPTYVARS",
+  "INPUT_BEVACTIONONNOREF",
+  "INPUT_BEVSETEMPTYVARS",
 ];
 
 let canOverwrite;
