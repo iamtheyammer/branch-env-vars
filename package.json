@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "ncc build src/index.js",
+    "build": "ncc build src/index.js -m",
     "format": "prettier --write \"src/**/*.js\""
   },
   "dependencies": {
