@@ -13,7 +13,7 @@ jobs:
 
       - name: Get node version
         run: |
-          echo "::set-env name=PROJECT_NODE_VERSION::$(cat $GITHUB_WORKSPACE/.nvmrc)"
+          echo "name=PROJECT_NODE_VERSION=$(cat $GITHUB_WORKSPACE/.nvmrc)" >> $GITHUB_ENV
 
       - name: Setup Node.js version ${{ env.PROJECT_NODE_VERSION }}
         uses: actions/setup-node@v2.1.0
