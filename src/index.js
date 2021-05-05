@@ -47,6 +47,9 @@ function parseBranchName(ref) {
     case "pulls":
       branchName = "!pr";
       break;
+    case "pull":
+      branchName = "!pr";
+      break;
     case "tags":
       branchName = "!tag";
       break;
