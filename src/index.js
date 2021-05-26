@@ -10,7 +10,7 @@ let canOverwrite;
 let noRefAction;
 let setEmptyVars;
 
-function parseBranchName(ref) {
+export function parseBranchName(ref) {
   if (!ref) {
     switch (noRefAction) {
       case "error":
@@ -58,7 +58,7 @@ function parseBranchName(ref) {
   return branchName;
 }
 
-function parseEnvVarPossibilities(envVars) {
+export function parseEnvVarPossibilities(envVars) {
   return Object.entries(envVars)
     .filter(
       ([name]) => name.startsWith("INPUT_") && !protectedEnvVars.includes(name)

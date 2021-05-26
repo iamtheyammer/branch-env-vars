@@ -6,7 +6,6 @@
   "repository": "https://github.com/iamtheyammer/branch-env-vars",
   "author": "iamtheyammer <iamtheyammer@gmail.com>",
   "license": "MIT",
-  "private": false,
   "scripts": {
     "build": "ncc build src/index.js -m",
     "format": "prettier --write \"src/**/*.js\""
@@ -16,6 +15,7 @@
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.3",
+    "jest": "^27.0.1",
     "prettier": "^2.0.5"
   }
 }
