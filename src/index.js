@@ -1,4 +1,4 @@
-import * as core from "@actions/core";
+const core = require("@actions/core");
 
 const protectedEnvVars = [
   "INPUT_BEVOVERWRITE",
@@ -10,7 +10,7 @@ let canOverwrite;
 let noRefAction;
 let setEmptyVars;
 
-export function parseBranchName(ref) {
+function parseBranchName(ref) {
   if (!ref) {
     switch (noRefAction) {
       case "error":
@@ -58,7 +58,7 @@ export function parseBranchName(ref) {
   return branchName;
 }
 
-export function parseEnvVarPossibilities(envVars) {
+function parseEnvVarPossibilities(envVars) {
   return Object.entries(envVars)
     .filter(
       ([name]) => name.startsWith("INPUT_") && !protectedEnvVars.includes(name)
@@ -138,3 +138,8 @@ try {
 } catch (e) {
   core.setFailed(e);
 }
+
+module.exports = {
+  parseBranchName,
+  parseEnvVarPossibilities,
+};
