@@ -27,7 +27,9 @@ function parseBranchName(ref) {
     }
   }
   // should look like [heads, my-branch-name] or [pulls, my-pull] or [tags, v0.0.0]
-  const [refType, refSourceName] = ref.replace("refs/", "").split("/");
+  const sanitizedRef = ref.replace("refs/", "");
+  const refType = sanitizedRef.slice(0, sanitizedRef.indexOf("/"));
+  const refSourceName = sanitizedRef.slice(sanitizedRef.indexOf("/") + 1);
 
   /* workflow yaml with:
   TEST_ENV_VAR: |

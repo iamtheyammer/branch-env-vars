@@ -14,15 +14,20 @@ describe("parseBranchName", () => {
     expect(parseBranchName("refs/heads/another-cool-branch")).toBe(
       "another-cool-branch"
     );
+    expect(parseBranchName("refs/heads/branch/with/slashes")).toBe(
+      "branch/with/slashes"
+    );
   });
 
   test("pull requests should resolve to !pr", () => {
     expect(parseBranchName("refs/pulls/mytestbranch")).toBe("!pr");
     expect(parseBranchName("refs/pull/mytestbranch")).toBe("!pr");
+    expect(parseBranchName("refs/pull/branch/with/slashes")).toBe("!pr");
   });
 
   test("tags should resolve to !tag", () => {
     expect(parseBranchName("refs/tags/mytestbranch")).toBe("!tag");
+    expect(parseBranchName("refs/tags/branch/with/slashes")).toBe("!tag");
   });
 });
 
@@ -45,6 +50,7 @@ describe("parseEnvVarPossibilities", () => {
       another-branch:abb-value
       colon:cb-value
       uses-env-var:uevb-value
+      has/slashes/in/branch/name:hsibn-value
       these-are-just-branch-names:tajbnb-value
 
       # this is a comment! (of course, we support empty lines!)
@@ -63,6 +69,7 @@ describe("parseEnvVarPossibilities", () => {
     expect(results["another-branch"]).toStrictEqual("abb-value");
     expect(results.colon).toStrictEqual("cb-value");
     expect(results["uses-env-var"]).toStrictEqual("uevb-value");
+    expect(results["has/slashes/in/branch/name"]).toStrictEqual("hsibn-value");
     expect(results["these-are-just-branch-names"]).toStrictEqual(
       "tajbnb-value"
     );
