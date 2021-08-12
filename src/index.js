@@ -111,6 +111,22 @@ function parseEnvVarPossibilities(envVars) {
     });
 }
 
+function matchBranchToEnvironmentVariable(possibleValues, branchName) {
+  const possibleValueKeys = Object.keys(possibleValues);
+  const wildcardKeys = possibleValueKeys.filter((k) => k.includes("*"));
+  let key = branchName;
+  if (wildcardKeys.length > 0) {
+    const wildcardKey = wildcardKeys.find((k) => {
+      const regex = new RegExp(
+        `${k.replaceAll("**", ".*").replaceAll("*", ".*")}`
+      );
+      return regex.test(branchName);
+    });
+    key = wildcardKey || branchName;
+  }
+  return possibleValues[key] || possibleValues["!default"];
+}
+
 try {
   canOverwrite = core.getInput("bevOverwrite") === "true";
   noRefAction = core.getInput("bevActionOnNoRef");
@@ -119,24 +135,22 @@ try {
   const ref = process.env.GITHUB_REF;
   const branchName = parseBranchName(ref);
 
-  const vars = parseEnvVarPossibilities(process.env).forEach(
-    ([name, possibleValues]) => {
-      if (!canOverwrite && !!process.env[name]) {
-        return;
-      }
-
-      const value = possibleValues[branchName] || possibleValues["!default"];
-      if (!value) {
-        if (setEmptyVars) {
-          core.exportVariable(name, "");
-          core.debug(`Exporting ${name} with an empty value`);
-        }
-      } else {
-        core.exportVariable(name, value);
-        core.debug(`Exporting ${name} with value ${value}`);
-      }
+  const possibilities = parseEnvVarPossibilities(process.env);
+  possibilities.forEach(([name, possibleValues]) => {
+    if (!canOverwrite && !!process.env[name]) {
+      return;
     }
-  );
+    const value = matchBranchToEnvironmentVariable(possibleValues, branchName);
+    if (!value) {
+      if (setEmptyVars) {
+        core.exportVariable(name, "");
+        core.debug(`Exporting ${name} with an empty value`);
+      }
+    } else {
+      core.exportVariable(name, value);
+      core.debug(`Exporting ${name} with value ${value}`);
+    }
+  });
 } catch (e) {
   core.setFailed(e);
 }
@@ -144,4 +158,5 @@ try {
 module.exports = {
   parseBranchName,
   parseEnvVarPossibilities,
+  matchBranchToEnvironmentVariable,
 };

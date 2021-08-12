@@ -23,6 +23,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
       colon:of course you can put colons in your values: see!
       uses-env-var:our workspace is at: ${{ env.GITHUB_WORKSPACE }}
       these-are-just-branch-names:isn't that cool!
+      wildcard/*:this is for branches prefixed by wildcard/
 
       # this is a comment! (of course, we support empty lines!)
       # you can also set special values, like the following
@@ -34,6 +35,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
     I_AM_SECRET: |
       master:${{ secrets.I_AM_SECRET_PROD }}
       staging:${{ secrets.I_AM_SECRET_STG }}
+      release/*:${{ secrets.I_AM_SECRET_PRE_PROD }}
       !default:i am not secret
     ANOTHER_EXAMPLE: |
       master:VALUEFORmaster
@@ -66,6 +68,7 @@ We use multi-line values because they can contain special characters, like `'`, 
 This action supports setting environment variables for:
 
 - Specific branches by name
+- Wildcard branch patterns
 - Pull requests
 - Tags
 - Defaults
@@ -81,11 +84,13 @@ It also supports static values.
     EXAMPLE: |
       master:valueformaster
       staging:valueforstaging
+      release/*:valueforreleasebranches
       !default:defaultvalue
 ```
 
 In the above example, if the branch is `master`, the value will be `valueformaster`.
 If the branch is `staging`, the value will be `valueforstaging`.
+If the branch is `release/1.0.0`, the value will be `valueforreleasebranches`.
 If we are building anything else, including a pull request, tag, or other branch, the value will be `defaultvalue`.
 
 If we did NOT provide a default, either the environment variable would not be set or it would be set to an empty string, based on your `bevSetEmptyVars` setting.
