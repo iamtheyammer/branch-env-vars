@@ -118,7 +118,7 @@ function matchBranchToEnvironmentVariable(possibleValues, branchName) {
   if (wildcardKeys.length > 0) {
     const wildcardKey = wildcardKeys.find((k) => {
       const regex = new RegExp(
-        `${k.replaceAll("**", ".*").replaceAll("*", ".*")}`
+        `${k.replace(/\*\*/g, ".*").replace(/\*/g, ".*")}`
       );
       return regex.test(branchName);
     });
