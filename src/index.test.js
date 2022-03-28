@@ -1,6 +1,10 @@
 const core = require("@actions/core");
 
-const { parseBranchName, parseEnvVarPossibilities } = require("./index");
+const {
+  parseBranchName,
+  parseEnvVarPossibilities,
+  matchBranchToEnvironmentVariable,
+} = require("./index");
 
 jest.mock("@actions/core");
 
@@ -52,6 +56,7 @@ describe("parseEnvVarPossibilities", () => {
       uses-env-var:uevb-value
       has/slashes/in/branch/name:hsibn-value
       these-are-just-branch-names:tajbnb-value
+      wildcard/*:wildcard-value
 
       # this is a comment! (of course, we support empty lines!)
       # you can also set special values, like the following
@@ -73,8 +78,114 @@ describe("parseEnvVarPossibilities", () => {
     expect(results["these-are-just-branch-names"]).toStrictEqual(
       "tajbnb-value"
     );
+    expect(results["wildcard/*"]).toStrictEqual("wildcard-value");
+
     expect(results["!pr"]).toStrictEqual("pr-value");
     expect(results["!tag"]).toStrictEqual("tag-value");
     expect(results["!default"]).toStrictEqual("default-value");
+  });
+});
+
+describe("matchBranchToEnvironmentVariable", () => {
+  test("wildcards work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      release/*:wildcard-value
+
+      !default:default-value
+`,
+    };
+
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(results, "release/1.0.0");
+    expect(value).toStrictEqual("wildcard-value");
+  });
+
+  test("multiple wildcards work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      release/*/feature/*/abc-123:wildcard-value
+
+      !default:default-value
+`,
+    };
+
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(
+      results,
+      "release/1.0.0/feature/v1/abc-123"
+    );
+    expect(value).toStrictEqual("wildcard-value");
+  });
+
+  test("wildcards that don't match don't work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      release/*/feature/*/abc-123:wildcard-value
+
+      !default:default-value
+`,
+    };
+
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(results, "release/1.0.0");
+    expect(value).toStrictEqual("default-value");
+  });
+
+  test("glob wildcards work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      release/**/v1/**/abc-123:glob-value
+
+      !default:default-value
+`,
+    };
+
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(
+      results,
+      "release/1.0.0/feature/v1/feature/123/abc-123"
+    );
+    expect(value).toStrictEqual("glob-value");
+  });
+
+  test("normal keys work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      master:master-value
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(results, "master");
+    expect(value).toStrictEqual("master-value");
+  });
+
+  test("multiple keys including wildcards work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      master:master-value
+      release/*:release-branch-value
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(results, "master");
+    expect(value).toStrictEqual("master-value");
+  });
+
+  test("key is just wildcard", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      *:master-value
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value = matchBranchToEnvironmentVariable(results, "master");
+    expect(value).toStrictEqual("master-value");
   });
 });
