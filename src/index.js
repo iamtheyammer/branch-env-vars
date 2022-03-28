@@ -1,4 +1,10 @@
-const core = require("@actions/core");
+const {
+  setFailed,
+  warning,
+  exportVariable,
+  getInput,
+  debug,
+} = require("@actions/core");
 
 const protectedEnvVars = [
   "INPUT_BEVOVERWRITE",
@@ -14,15 +20,15 @@ function parseBranchName(ref) {
   if (!ref) {
     switch (noRefAction) {
       case "error":
-        core.setFailed("Unable to get github.ref/GITHUB_REF");
+        setFailed("Unable to get github.ref/GITHUB_REF");
         return;
       case "warn":
-        core.warning("Unable to get github.ref/GITHUB_REF");
+        warning("Unable to get github.ref/GITHUB_REF");
         break;
       case "continue":
         break;
       default:
-        core.setFailed(`Invalid value for bevActionOnNoRef: ${noRefAction}`);
+        setFailed(`Invalid value for bevActionOnNoRef: ${noRefAction}`);
         return;
     }
   }
@@ -47,10 +53,10 @@ function parseBranchName(ref) {
       branchName = refSourceName;
       break;
     case "pulls":
-      branchName = "!pr";
+      branchName = `!pr>${refSourceName}`;
       break;
     case "pull":
-      branchName = "!pr";
+      branchName = `!pr>${refSourceName}`;
       break;
     case "tags":
       branchName = "!tag";
@@ -113,6 +119,8 @@ function parseEnvVarPossibilities(envVars) {
 
 function matchBranchToEnvironmentVariable(possibleValues, branchName) {
   const possibleValueKeys = Object.keys(possibleValues);
+
+  // handle wildcards
   const wildcardKeys = possibleValueKeys.filter((k) => k.includes("*"));
   let key = branchName;
   if (wildcardKeys.length > 0) {
@@ -124,38 +132,61 @@ function matchBranchToEnvironmentVariable(possibleValues, branchName) {
     });
     key = wildcardKey || branchName;
   }
+
+  if (key.startsWith("!pr")) {
+    // if a specific pr matcher matches, use that
+    if (possibleValues[key]) {
+      return possibleValues[key];
+    } else if (possibleValues["!pr"]) {
+      return possibleValues["!pr"];
+    }
+    return possibleValues["!default"];
+  }
+
   return possibleValues[key] || possibleValues["!default"];
 }
 
-try {
-  canOverwrite = core.getInput("bevOverwrite") === "true";
-  noRefAction = core.getInput("bevActionOnNoRef");
-  setEmptyVars = core.getInput("bevSetEmptyVars") === "true";
+function branchEnvVars(environmentVariables) {
+  try {
+    canOverwrite = getInput("bevOverwrite") === "true";
+    noRefAction = getInput("bevActionOnNoRef");
+    setEmptyVars = getInput("bevSetEmptyVars") === "true";
 
-  const ref = process.env.GITHUB_REF;
-  const branchName = parseBranchName(ref);
+    const ref = environmentVariables.GITHUB_REF;
+    const branchName = parseBranchName(ref);
 
-  parseEnvVarPossibilities(process.env).forEach(([name, possibleValues]) => {
-    if (!canOverwrite && !!process.env[name]) {
-      return;
-    }
+    parseEnvVarPossibilities(environmentVariables).forEach(
+      ([name, possibleValues]) => {
+        if (!canOverwrite && !!environmentVariables[name]) {
+          return;
+        }
 
-    const value = possibleValues[branchName] || possibleValues["!default"];
-    if (!value) {
-      if (setEmptyVars) {
-        core.exportVariable(name, "");
-        core.debug(`Exporting ${name} with an empty value`);
+        const value = matchBranchToEnvironmentVariable(
+          possibleValues,
+          branchName
+        );
+        if (!value) {
+          if (setEmptyVars) {
+            exportVariable(name, "");
+            debug(`Exporting ${name} with an empty value`);
+          }
+        } else {
+          exportVariable(name, value);
+          debug(`Exporting ${name} with value ${value}`);
+        }
       }
-    } else {
-      core.exportVariable(name, value);
-      core.debug(`Exporting ${name} with value ${value}`);
-    }
-  });
-} catch (e) {
-  core.setFailed(e);
+    );
+  } catch (e) {
+    setFailed(e);
+  }
+}
+
+if (!process.env.JEST_WORKER_ID) {
+  branchEnvVars(process.env);
 }
 
 module.exports = {
+  branchEnvVars,
   parseBranchName,
   parseEnvVarPossibilities,
   matchBranchToEnvironmentVariable,

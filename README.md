@@ -12,7 +12,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
 
 ```yaml
 - name: Set branch-based environment variables
-  uses: iamtheyammer/branch-env-vars@v1.1.0
+  uses: iamtheyammer/branch-env-vars@v1.1.2
   with:
     # optional, just an example of setting a setting
     bevOverwrite: true
@@ -24,11 +24,16 @@ You may add as many branch-based environment variables as you'd like, in this fa
       uses-env-var:our workspace is at: ${{ env.GITHUB_WORKSPACE }}
       these-are-just-branch-names:isn't that cool!
       wildcard/*:this is for branches prefixed by wildcard/
+      wildcard/**/feature:sure, we support glob patterns, too. (note that * and ** performs identically)
 
       # this is a comment! (of course, we support empty lines!)
       # you can also set special values, like the following
 
       !pr:this is the value if we are building a PR
+      !pr>basebranch:this is the value if we are building a PR off basebranch
+      !pr>feature/*:this is the value if we are building a PR off any branch that starts with feature/
+      !pr>feature/**/tested:yep, pr's support glob patterns too, but, again * performs identically to **
+      
       !tag:this is the value if we are building a tag
       !default:this is the default value. leaving this out is fine, but the variable might be empty. see bevSetEmptyVars.
     STATIC_VAR: 'i am a static env var. static vars may not contain line breaks.'
