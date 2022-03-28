@@ -29,13 +29,14 @@ You may add as many branch-based environment variables as you'd like, in this fa
       # this is a comment! (of course, we support empty lines!)
       # you can also set special values, like the following
 
-      !pr:this is the value if we are building a PR
+      !pr:this is the value if we are building a PR (and we don't match any more specific patterns)
       !pr>basebranch:this is the value if we are building a PR off basebranch
       !pr>feature/*:this is the value if we are building a PR off any branch that starts with feature/
       !pr>feature/**/tested:yep, pr's support glob patterns too, but, again * performs identically to **
       
       !tag:this is the value if we are building a tag
       !default:this is the default value. leaving this out is fine, but the variable might be empty. see bevSetEmptyVars.
+      *:avoid this!! read the Wildcards section!!
     STATIC_VAR: 'i am a static env var. static vars may not contain line breaks.'
     I_AM_SECRET: |
       master:${{ secrets.I_AM_SECRET_PROD }}
@@ -108,13 +109,66 @@ If we did NOT provide a default, either the environment variable would not be se
   with:
     EXAMPLE: |
       !pr:valueforapullrequest
+      !pr>basebranch:valueforaproffbasebranch
+      !pr>feature/*:valueforaprofffeature/
+      
       !tag:valueforatag
       !default:valueforanythingelse
 ```
 
-In the above example, if the run is for a pull request, the value will be `valueforapullrequest`.
+For pull requests, you can use the special syntax `!pr>branchname` to match on pull requests merging into `branchname`.
+This also supports [wildcards](#Wildcards).
+
+In the above example, if the run is for a pull request:
+- If the PR is off `basebranch`, the value will be `valueforaproffbasebranch`
+- If the PR is off `feature/*` (meaning `feature/foo`, `feature/bar`, etc will match), the value will be `valueforaprofffeature/`
+- Finally, if the PR doesn't match either base branch pattern (not off `basebranch` or `feature/*`), the value will be `valueforapullrequest`
+
 If the run is for a tag, the value will be `valueforatag`.
 If we are building anything else, like a branch, the value will be `valueforanythingelse`.
+
+#### Wildcards
+
+```yaml
+- name: Set branch-based environment variables
+  uses: iamtheyammer/branch-env-vars@...
+  with:
+    EXAMPLE: |
+      feature/*:value for any feature branch
+      !pr>feature/*:value for a pr merging into any feature branch
+      
+      # note that * and ** do exactly the same thing!
+      feature/*/foo:value for any feature branch ending in /foo
+      feature/**/bar: value for any feature branch ending in /bar 
+      
+      # yep, this works for PRs too!
+      
+      !pr>feature/*:value for any pr merging into feature/*
+      !pr>feature/**/bar:value for any pr merging into any feature branch ending in 
+      
+      !default:valueforanythingelse
+```
+
+You can use wildcards (`*` or `**`) in all branch names, including in PR base branch names.
+
+They allow you to, for example, match any branch starting or ending with something.
+
+A couple quirks:
+- `*` and `**` perform identically. Please **do not** use more than two `*`s.
+- For pull requests, if you just want to match all, you can just do `!pr:value`. You don't need to do `!pr>*`, although they'll both work.
+- Wildcards match _any_ characters, include slashes. They're turned into Regex `.*`, so `feature/*` turns into the regular expression `feature/.*`, then we match the regex with your branch name.
+
+One quick note on what happens if you do this:
+```yaml
+EXAMPLE: |
+  *:catchall
+  !default:defaultcatchall
+```
+
+Technically, this will work, and `*` has priority over `!default`, but this is a poor pattern.
+However, please don't do this. Use `!default` and static variables when necessary.
+This leads to weird behavior, is unpredictable, is hard to read, and is **unsupported**, so its functionality may change with updates.
+**Don't do this!**
 
 #### Static values
 

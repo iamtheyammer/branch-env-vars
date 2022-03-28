@@ -281,6 +281,22 @@ describe("matchBranchToEnvironmentVariable", () => {
         matchBranchToEnvironmentVariable(results, "!pr>master")
       ).toStrictEqual("master-value");
     });
+
+    test("!pr acts as a default", () => {
+      const envVars = {
+        INPUT_TESTENVVAR: `
+        !pr>brancha:foo
+        !pr>branchb/*:bar
+        !pr:baz
+        `,
+      };
+
+      const results = parseEnvVarPossibilities(envVars)[0][1];
+      expect(
+        // matchBranchToEnvironmentVariable takes in the processed branch name, which would include !pr>.
+        matchBranchToEnvironmentVariable(results, "!pr>branchX")
+      ).toStrictEqual("baz");
+    });
   });
 
   test("normal keys work", () => {
