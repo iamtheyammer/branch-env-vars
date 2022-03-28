@@ -135,12 +135,12 @@ try {
   const ref = process.env.GITHUB_REF;
   const branchName = parseBranchName(ref);
 
-  const possibilities = parseEnvVarPossibilities(process.env);
-  possibilities.forEach(([name, possibleValues]) => {
+  parseEnvVarPossibilities(process.env).forEach(([name, possibleValues]) => {
     if (!canOverwrite && !!process.env[name]) {
       return;
     }
-    const value = matchBranchToEnvironmentVariable(possibleValues, branchName);
+
+    const value = possibleValues[branchName] || possibleValues["!default"];
     if (!value) {
       if (setEmptyVars) {
         core.exportVariable(name, "");
