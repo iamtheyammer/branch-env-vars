@@ -52,9 +52,6 @@ function parseBranchName(ref) {
     case "heads":
       branchName = refSourceName;
       break;
-    case "pulls":
-      branchName = `!pr>${refSourceName}`;
-      break;
     case "pull":
       branchName = `!pr>${refSourceName}`;
       break;
