@@ -343,6 +343,21 @@ describe("integration tests", () => {
     expect(exportVariable).toHaveBeenCalledWith("TESTENVVAR", "valueformaster");
   });
 
+  test("properly handles base branches", () => {
+    const envVars = {
+      GITHUB_REF: "refs/pull/master",
+      GITHUB_BASE_REF: "base",
+      INPUT_TESTENVVAR: `
+      !pr>base:basevalue
+      !default:invalid
+      `,
+    };
+
+    branchEnvVars(envVars);
+    expect(setFailed).toHaveBeenCalledTimes(0);
+    expect(exportVariable).toHaveBeenCalledWith("TESTENVVAR", "basevalue");
+  });
+
   test("fails on invalid bevActionOnNoRef", () => {
     const envVars = {
       INPUT_BEVACTIONONNOREF: "invalidaction",
