@@ -30,14 +30,12 @@ describe("parseBranchName", () => {
   });
 
   test("pull requests to !pr>basebranch", () => {
-    expect(parseBranchName("refs/pulls/basebranch")).toBe("!pr>basebranch");
-    expect(parseBranchName("refs/pull/basebranch")).toBe("!pr>basebranch");
-    expect(parseBranchName("refs/pull/branch/with/slashes")).toBe(
+    expect(parseBranchName("refs/pull/20/merge", "basebranch")).toBe("!pr>basebranch");
+    expect(parseBranchName("refs/pull/20/merge", "branch/with/slashes")).toBe(
       "!pr>branch/with/slashes"
     );
 
-    expect(parseBranchName("refs/pulls/feature/*")).toBe("!pr>feature/*");
-    expect(parseBranchName("refs/pull/feature/*")).toBe("!pr>feature/*");
+    expect(parseBranchName("refs/pull/20/merge", "feature/*")).toBe("!pr>feature/*");
   });
 
   test("tags should resolve to !tag", () => {

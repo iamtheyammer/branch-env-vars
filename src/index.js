@@ -16,7 +16,7 @@ let canOverwrite;
 let noRefAction;
 let setEmptyVars;
 
-function parseBranchName(ref) {
+function parseBranchName(ref, baseRef) {
   if (!ref) {
     switch (noRefAction) {
       case "error":
@@ -52,11 +52,8 @@ function parseBranchName(ref) {
     case "heads":
       branchName = refSourceName;
       break;
-    case "pulls":
-      branchName = `!pr>${refSourceName}`;
-      break;
     case "pull":
-      branchName = `!pr>${refSourceName}`;
+      branchName = `!pr>${baseRef}`;
       break;
     case "tags":
       branchName = "!tag";
@@ -153,7 +150,8 @@ function branchEnvVars(environmentVariables) {
     setEmptyVars = getInput("bevSetEmptyVars") === "true";
 
     const ref = environmentVariables.GITHUB_REF;
-    const branchName = parseBranchName(ref);
+    const baseRef = environmentVariables.GITHUB_BASE_REF;
+    const branchName = parseBranchName(ref, baseRef);
 
     parseEnvVarPossibilities(environmentVariables).forEach(
       ([name, possibleValues]) => {
