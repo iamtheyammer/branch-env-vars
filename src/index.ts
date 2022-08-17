@@ -21,7 +21,7 @@ let setEmptyVars;
 // if a base ref exists, it'll return !pr>$base_ref
 // tags return !tag
 // finally, for everything else, we'll return !default
-function parseBranchName(ref?: string, baseRef?: string): string {
+export function parseBranchName(ref?: string, baseRef?: string): string {
   if (!ref) {
     switch (noRefAction) {
       case "error":
@@ -84,7 +84,7 @@ type EnvVarPossibilities = [
     PossibleValues
 ][];
 
-function parseEnvVarPossibilities(envVars: {[varName: string]: string}): EnvVarPossibilities {
+export function parseEnvVarPossibilities(envVars: {[varName: string]: string}): EnvVarPossibilities {
   return Object.entries(envVars)
     // use only input (uses) data and
     // remove protected var names (settings)
@@ -140,7 +140,7 @@ function parseEnvVarPossibilities(envVars: {[varName: string]: string}): EnvVarP
     });
 }
 
-function getValueForBranch(branchName: string, possibleValues: PossibleValues): string {
+export function getValueForBranch(branchName: string, possibleValues: PossibleValues): string {
   const possibleValueKeys = Object.keys(possibleValues);
 
   // handle wildcards
@@ -174,7 +174,7 @@ function getValueForBranch(branchName: string, possibleValues: PossibleValues): 
   return possibleValues[key] || possibleValues["!default"];
 }
 
-function branchEnvVars(environmentVariables): void {
+export function branchEnvVars(environmentVariables): void {
   try {
     // handle settings
     canOverwrite = getInput("bevOverwrite") === "true";
@@ -213,10 +213,3 @@ function branchEnvVars(environmentVariables): void {
 if (!process.env.JEST_WORKER_ID) {
   branchEnvVars(process.env);
 }
-
-module.exports = {
-  branchEnvVars,
-  parseBranchName,
-  parseEnvVarPossibilities,
-  getValueForBranch,
-};
