@@ -48,10 +48,23 @@ jobs:
         with:
           node-version: ${{ env.PROJECT_NODE_VERSION }}
 
+      - name: Move the currently compiled version
+        run: |
+          mv dist/index.js dist/index.repo.js
+
       - name: Install dependencies and compile code
         run: |
           yarn install
           yarn build
+
+      - name: Ensure that the repo version and built version are identical
+        run: |
+          if cmp -s -- dist/index.repo.js dist/index.js; then
+            echo "Files are identical"
+          else
+            echo "The built version in the repo (dist/index.js) doesn't match the version I just built."
+            exit 1
+          fi
 
       - name: Run tests
         run: |
