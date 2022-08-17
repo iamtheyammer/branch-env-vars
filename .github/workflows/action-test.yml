@@ -63,6 +63,7 @@ jobs:
             echo "Files are identical"
           else
             echo "The built version in the repo (dist/index.js) doesn't match the version I just built."
+            echo "Make sure you ran yarn build before committing."
             exit 1
           fi
 
