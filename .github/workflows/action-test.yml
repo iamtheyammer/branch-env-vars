@@ -15,6 +15,34 @@ jobs:
         run: |
           echo "name=PROJECT_NODE_VERSION=$(cat $GITHUB_WORKSPACE/.nvmrc)" >> $GITHUB_ENV
 
+      - name: Print environment variables before action test
+        run: |
+          env
+
+      - name: Test the action
+        uses: ./
+        with:
+          STATICTEST: mystaticvalue
+          TESTVAR1: |
+            master:master-value
+            !default:default-value
+          TESTVAR2: |
+            !pr>master:pr-master-value
+            !pr>*:pr-wildcard-value
+            !tag:tag-value
+            !default:default-value
+          TESTVAR3: |
+            # yes, I know this is unsupported!
+            
+            *:wildcard-value
+            !default:default-value
+          TESTVAR4: |
+            branch-that-will-never-match:unexplainable-value
+
+      - name: Print environment variables after action test
+        run: |
+          env
+
       - name: Setup Node.js version ${{ env.PROJECT_NODE_VERSION }}
         uses: actions/setup-node@v2.1.0
         with:
