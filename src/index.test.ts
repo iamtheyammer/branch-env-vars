@@ -1,17 +1,21 @@
-jest.mock("@actions/core");
-
-const {
-  setFailed,
-  exportVariable,
-  getInput,
-} = require("@actions/core");
-
-const {
+import {
   branchEnvVars,
   parseBranchName,
   parseEnvVarPossibilities,
   getValueForBranch,
-} = require("./index");
+} from "./index";
+
+import {
+  setFailed as unMockedSetFailed,
+  exportVariable as unMockedExportVariable,
+  getInput as unMockedGetInput,
+} from "@actions/core";
+
+const setFailed = jest.mocked(unMockedSetFailed, true);
+const exportVariable = jest.mocked(unMockedExportVariable, true);
+const getInput = jest.mocked(unMockedGetInput, true);
+
+jest.mock("@actions/core");
 
 describe("parseBranchName", () => {
   test("empty input", () => {

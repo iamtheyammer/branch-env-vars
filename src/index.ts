@@ -54,7 +54,7 @@ export function parseBranchName(ref?: string, baseRef?: string): string {
   let branchName = "!default";
 
   // if there is a base ref, we are building a pr.
-  if(!!baseRef) {
+  if(baseRef) {
     branchName = `!pr>${baseRef}`;
   } else {
     switch (refType) {

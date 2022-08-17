@@ -11,10 +11,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get node version
-        run: |
-          echo "name=PROJECT_NODE_VERSION=$(cat $GITHUB_WORKSPACE/.nvmrc)" >> $GITHUB_ENV
-
       - name: Print environment variables before action test
         run: |
           env
@@ -22,42 +18,54 @@ jobs:
       - name: Test the action
         uses: ./
         with:
-          STATICTEST: mystaticvalue
-          TESTVAR1: |
+          TESTVAR1: mystaticvalue
+          TESTVAR2: |
             master:master-value
             !default:default-value
-          TESTVAR2: |
+          TESTVAR3: |
             !pr>master:pr-master-value
             !pr>*:pr-wildcard-value
             !tag:tag-value
             !default:default-value
-          TESTVAR3: |
+          TESTVAR4: |
             # yes, I know this is unsupported!
             
             *:wildcard-value
             !default:default-value
-          TESTVAR4: |
+          TESTVAR5: |
             branch-that-will-never-match:unexplainable-value
 
       - name: Print environment variables after action test
         run: |
           env
 
+      - name: Get Node.js version from .nvmrc
+        run: |
+          echo "name=PROJECT_NODE_VERSION=$(cat $GITHUB_WORKSPACE/.nvmrc)" >> $GITHUB_ENV
+
       - name: Setup Node.js version ${{ env.PROJECT_NODE_VERSION }}
         uses: actions/setup-node@v2.1.0
         with:
           node-version: ${{ env.PROJECT_NODE_VERSION }}
 
-      - name: Move the currently compiled version
+      - name: Install dependencies
+        run: |
+          yarn
+
+      - name: Lint and test code
+        run: |
+          yarn lint
+          yarn test
+
+      - name: Rename the currently compiled version
         run: |
           mv dist/index.js dist/index.repo.js
 
-      - name: Install dependencies and compile code
+      - name: Build code
         run: |
-          yarn install
           yarn build
 
-      - name: Ensure that the repo version and built version are identical
+      - name: Ensure that dist/index.js is up-to-date
         run: |
           if cmp -s -- dist/index.repo.js dist/index.js; then
             echo "Files are identical"
