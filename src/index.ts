@@ -146,7 +146,8 @@ export function getValueForBranch(branchName: string, possibleValues: PossibleVa
   // handle wildcards
   const wildcardKeys = possibleValueKeys.filter((k) => k.includes("*"));
   let key = branchName;
-  if (wildcardKeys.length > 0) {
+  // if there's a wildcard and no exact match
+  if (wildcardKeys.length > 0 && !possibleValues[key]) {
     // find the first branch pattern where the wildcard matches
     const wildcardKey = wildcardKeys.find((k) => {
       // replace *s with .* and run as regex

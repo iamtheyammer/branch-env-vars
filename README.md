@@ -168,6 +168,7 @@ A couple quirks:
 - `*` and `**` perform identically. Please **do not** use more than two `*`s.
 - For pull requests, if you just want to match all, you can just do `!pr:value`. You don't need to do `!pr>*`, although they'll both work.
 - Wildcards match _any_ characters, include slashes. They're turned into Regex `.*`, so `feature/*` turns into the regular expression `feature/.*`, then we match the regex with your branch name.
+- Exact matches are processed before wildcards. So, if you had values for both `feat/foo` and `feat/*` and you're building on the `feat/foo` branch, the value for `feat/foo` will be used, not the value of `feat/*`. This also applies to pull requests.
 
 One quick note on what happens if you do this:
 ```yaml
