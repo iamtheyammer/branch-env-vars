@@ -1,10 +1,10 @@
-const {
+import {
   setFailed,
   warning,
   exportVariable,
   getInput,
-  debug,
-} = require("@actions/core");
+  debug
+} from "@actions/core";
 
 const protectedEnvVars = [
   "INPUT_BEVOVERWRITE",
@@ -16,7 +16,12 @@ let canOverwrite;
 let noRefAction;
 let setEmptyVars;
 
-function parseBranchName(ref, baseRef) {
+// determines the branch we should match to.
+// if we're building a branch, returns the branch name.
+// if a base ref exists, it'll return !pr>$base_ref
+// tags return !tag
+// finally, for everything else, we'll return !default
+export function parseBranchName(ref?: string, baseRef?: string): string {
   if (!ref) {
     switch (noRefAction) {
       case "error":
@@ -48,23 +53,41 @@ function parseBranchName(ref, baseRef) {
 
   let branchName = "!default";
 
-  switch (refType) {
-    case "heads":
-      branchName = refSourceName;
-      break;
-    case "pull":
-      branchName = `!pr>${baseRef}`;
-      break;
-    case "tags":
-      branchName = "!tag";
-      break;
+  // if there is a base ref, we are building a pr.
+  if(baseRef) {
+    branchName = `!pr>${baseRef}`;
+  } else {
+    switch (refType) {
+      case "heads":
+        branchName = refSourceName;
+        break;
+      // case "pull":
+      //   branchName = `!pr>${baseRef}`;
+      //   break;
+      case "tags":
+        branchName = "!tag";
+        break;
+    }
   }
 
   return branchName;
 }
 
-function parseEnvVarPossibilities(envVars) {
+type PossibleValues = {
+  [branchNameOrPattern: string]: string,
+  "!default"?: string
+}
+
+type EnvVarPossibilities = [
+    // var name
+    string,
+    PossibleValues
+][];
+
+export function parseEnvVarPossibilities(envVars: {[varName: string]: string}): EnvVarPossibilities {
   return Object.entries(envVars)
+    // use only input (uses) data and
+    // remove protected var names (settings)
     .filter(
       ([name]) => name.startsWith("INPUT_") && !protectedEnvVars.includes(name)
     )
@@ -83,18 +106,21 @@ function parseEnvVarPossibilities(envVars) {
       }
 
       /*
+      Here, we reduce the paragraph value of branch:value pairs into
+      a JavaScript object with branch names/patterns (like !default) as keys.
       {
         "master": "someValueForMaster",
         "staging": "someValueForStaging",
         // ...
       }
        */
-      const possibleValues = value.split("\n").reduce((acc, pair) => {
+      const possibleValues: {[branchNameOrPattern: string]: string} = value.split("\n").reduce((acc, pair) => {
         // comment or empty line
         if (pair.trim().startsWith("#") || !pair.trim().length) {
           return acc;
         }
 
+        // find first colon
         const separatorLoc = pair.indexOf(":");
         if (separatorLoc === -1) {
           throw new Error(
@@ -114,42 +140,51 @@ function parseEnvVarPossibilities(envVars) {
     });
 }
 
-function matchBranchToEnvironmentVariable(possibleValues, branchName) {
+export function getValueForBranch(branchName: string, possibleValues: PossibleValues): string {
   const possibleValueKeys = Object.keys(possibleValues);
 
   // handle wildcards
   const wildcardKeys = possibleValueKeys.filter((k) => k.includes("*"));
   let key = branchName;
-  if (wildcardKeys.length > 0) {
+  // if there's a wildcard and no exact match
+  if (wildcardKeys.length > 0 && !possibleValues[key]) {
+    // find the first branch pattern where the wildcard matches
     const wildcardKey = wildcardKeys.find((k) => {
-      const regex = new RegExp(
-        `${k.replace(/\*\*/g, ".*").replace(/\*/g, ".*")}`
-      );
+      // replace *s with .* and run as regex
+      const regex = new RegExp(k.replace(/\*\*/g, ".*").replace(/\*/g, ".*"));
+      // return whether the branch name matches the regex
       return regex.test(branchName);
     });
-    key = wildcardKey || branchName;
+    // if we found a match, wildcardKey will be used. If not, the key will stay as the branch name.
+    // so, if key was !pr>staging/* and our branch is staging/1234, key will now be !pr>staging/*.
+    key = wildcardKey ? wildcardKey : branchName;
   }
 
   if (key.startsWith("!pr")) {
-    // if a specific pr matcher matches, use that
+    // first, attempt to use the key
     if (possibleValues[key]) {
       return possibleValues[key];
     } else if (possibleValues["!pr"]) {
+      // if that doesn't work, try to use the default pr matcher
       return possibleValues["!pr"];
     }
+    // fallback to default since no pr matched
     return possibleValues["!default"];
   }
 
   return possibleValues[key] || possibleValues["!default"];
 }
 
-function branchEnvVars(environmentVariables) {
+export function branchEnvVars(environmentVariables): void {
   try {
+    // handle settings
     canOverwrite = getInput("bevOverwrite") === "true";
     noRefAction = getInput("bevActionOnNoRef");
     setEmptyVars = getInput("bevSetEmptyVars") === "true";
 
+    // head ref (branch we're building)
     const ref = environmentVariables.GITHUB_REF;
+    // base ref (if on a pr, base we're going to merge into)
     const baseRef = environmentVariables.GITHUB_BASE_REF;
     const branchName = parseBranchName(ref, baseRef);
 
@@ -159,10 +194,7 @@ function branchEnvVars(environmentVariables) {
           return;
         }
 
-        const value = matchBranchToEnvironmentVariable(
-          possibleValues,
-          branchName
-        );
+        const value = getValueForBranch(branchName, possibleValues);
         if (!value) {
           if (setEmptyVars) {
             exportVariable(name, "");
@@ -182,10 +214,3 @@ function branchEnvVars(environmentVariables) {
 if (!process.env.JEST_WORKER_ID) {
   branchEnvVars(process.env);
 }
-
-module.exports = {
-  branchEnvVars,
-  parseBranchName,
-  parseEnvVarPossibilities,
-  matchBranchToEnvironmentVariable,
-};

@@ -2,6 +2,17 @@
 
 A GitHub Action to allow for branch-based environment variables
 
+- [Inputs](#inputs)
+  - [Settings (they're all optional)](#settings)
+  - [Environment Variables](#environment-variables)
+    - [Values by branch name](#values-by-branch-name)
+    - [Values for pull requests and tags](#values-for-pull-requests-and-tags)
+    - [Wildcards](#wildcards)
+    - [Static values](#static-values)
+    - [Comments and empty lines](#comments-and-empty-lines)
+- [Common Issues](#common-issues)
+- [Contributing](#contributing)
+
 ## Inputs
 
 ### Example
@@ -12,7 +23,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
 
 ```yaml
 - name: Set branch-based environment variables
-  uses: iamtheyammer/branch-env-vars@v1.1.3
+  uses: iamtheyammer/branch-env-vars@v1.2
   with:
     # optional, just an example of setting a setting
     bevOverwrite: true
@@ -157,6 +168,7 @@ A couple quirks:
 - `*` and `**` perform identically. Please **do not** use more than two `*`s.
 - For pull requests, if you just want to match all, you can just do `!pr:value`. You don't need to do `!pr>*`, although they'll both work.
 - Wildcards match _any_ characters, include slashes. They're turned into Regex `.*`, so `feature/*` turns into the regular expression `feature/.*`, then we match the regex with your branch name.
+- Exact matches are processed before wildcards. So, if you had values for both `feat/foo` and `feat/*` and you're building on the `feat/foo` branch, the value for `feat/foo` will be used, not the value of `feat/*`. This also applies to pull requests.
 
 One quick note on what happens if you do this:
 ```yaml
@@ -166,7 +178,7 @@ EXAMPLE: |
 ```
 
 Technically, this will work, and `*` has priority over `!default`, but this is a poor pattern.
-However, please don't do this. Use `!default` and static variables when necessary.
+Please don't do this. Use `!default` and static variables when necessary.
 This leads to weird behavior, is unpredictable, is hard to read, and is **unsupported**, so its functionality may change with updates.
 **Don't do this!**
 
@@ -261,3 +273,12 @@ If you're still having this issue with a multiline declaration, make there's a n
 ### Warning: Unexpected input(s) 'YOUR_VAR_NAME', ...
 
 This warning is caused by the way GitHub parses `with` data. Don't worry about it.
+
+## Contributing
+
+Many folks have already contributed to this repo, and I'm so grateful to them.
+
+I absolutely appreciate pull requests adding and fixing functionality-- although if you'd like to add functionality I humbly ask that you create an issue first so that we can discuss how the feature will work.
+
+Also, please note that I'm a full-time student, so I may not be able to respond as quickly as I'd like, but this project is actively maintained.
+

@@ -11,7 +11,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get node version
+      - name: Print environment variables before action test
+        run: |
+          env
+
+      - name: Test the action
+        uses: ./
+        with:
+          TESTVAR1: mystaticvalue
+          TESTVAR2: |
+            master:master-value
+            !pr:pr-value
+            !tag:tag-value
+            !default:default-value
+          TESTVAR3: |
+            !pr>master:pr-master-value
+            !pr>*:pr-wildcard-value
+            !tag:tag-value
+            !default:default-value
+          TESTVAR4: |
+            # yes, I know this is unsupported!
+            
+            *:wildcard-value
+            !default:default-value
+          TESTVAR5: |
+            branch-that-will-never-match:unexplainable-value
+
+      - name: Print environment variables after action test
+        run: |
+          env
+
+      - name: Get Node.js version from .nvmrc
         run: |
           echo "name=PROJECT_NODE_VERSION=$(cat $GITHUB_WORKSPACE/.nvmrc)" >> $GITHUB_ENV
 
@@ -20,10 +50,32 @@ jobs:
         with:
           node-version: ${{ env.PROJECT_NODE_VERSION }}
 
-      - name: Install dependencies and compile code
+      - name: Install dependencies
         run: |
-          yarn install
+          yarn
+
+      - name: Lint and test code
+        run: |
+          yarn lint
+          yarn test
+
+      - name: Rename the currently compiled version
+        run: |
+          mv dist/index.js dist/index.repo.js
+
+      - name: Build code
+        run: |
           yarn build
+
+      - name: Ensure that dist/index.js is up-to-date
+        run: |
+          if cmp -s -- dist/index.repo.js dist/index.js; then
+            echo "Files are identical"
+          else
+            echo "The built version in the repo (dist/index.js) doesn't match the version I just built."
+            echo "Make sure you ran yarn build before committing."
+            exit 1
+          fi
 
       - name: Run tests
         run: |

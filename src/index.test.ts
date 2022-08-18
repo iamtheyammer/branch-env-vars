@@ -1,18 +1,21 @@
-jest.mock("@actions/core");
-
-const {
-  setFailed,
-  warning,
-  exportVariable,
-  getInput,
-} = require("@actions/core");
-
-const {
+import {
   branchEnvVars,
   parseBranchName,
   parseEnvVarPossibilities,
-  matchBranchToEnvironmentVariable,
-} = require("./index");
+  getValueForBranch,
+} from "./index";
+
+import {
+  setFailed as unMockedSetFailed,
+  exportVariable as unMockedExportVariable,
+  getInput as unMockedGetInput,
+} from "@actions/core";
+
+const setFailed = jest.mocked(unMockedSetFailed, true);
+const exportVariable = jest.mocked(unMockedExportVariable, true);
+const getInput = jest.mocked(unMockedGetInput, true);
+
+jest.mock("@actions/core");
 
 describe("parseBranchName", () => {
   test("empty input", () => {
@@ -101,7 +104,7 @@ describe("parseEnvVarPossibilities", () => {
   });
 });
 
-describe("matchBranchToEnvironmentVariable", () => {
+describe("getValueForBranch", () => {
   describe("wildcard branch names", () => {
     test("wildcards work", () => {
       const envVars = {
@@ -113,7 +116,7 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(results, "release/1.0.0");
+      const value = getValueForBranch("release/1.0.0", results);
       expect(value).toStrictEqual("wildcard-value");
     });
 
@@ -127,9 +130,9 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(
-        results,
-        "release/1.0.0/feature/v1/abc-123"
+      const value = getValueForBranch(
+        "release/1.0.0/feature/v1/abc-123",
+        results
       );
       expect(value).toStrictEqual("wildcard-value");
     });
@@ -144,7 +147,7 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(results, "release/1.0.0");
+      const value = getValueForBranch("release/1.0.0", results);
       expect(value).toStrictEqual("default-value");
     });
 
@@ -158,9 +161,9 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(
-        results,
-        "release/1.0.0/feature/v1/feature/123/abc-123"
+      const value = getValueForBranch(
+        "release/1.0.0/feature/v1/feature/123/abc-123",
+        results
       );
       expect(value).toStrictEqual("glob-value");
     });
@@ -175,7 +178,7 @@ describe("matchBranchToEnvironmentVariable", () => {
 `,
       };
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(results, "master");
+      const value = getValueForBranch("master", results);
       expect(value).toStrictEqual("master-value");
     });
 
@@ -188,7 +191,7 @@ describe("matchBranchToEnvironmentVariable", () => {
 `,
       };
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(results, "master");
+      const value = getValueForBranch("master", results);
       expect(value).toStrictEqual("master-value");
     });
   });
@@ -204,9 +207,9 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(
-        results,
-        "!pr>release/1.0.0"
+      const value = getValueForBranch(
+        "!pr>release/1.0.0",
+        results
       );
       expect(value).toStrictEqual("wildcard-value");
     });
@@ -221,9 +224,9 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(
-        results,
-        "!pr>release/1.0.0/feature/v1/abc-123"
+      const value = getValueForBranch(
+        "!pr>release/1.0.0/feature/v1/abc-123",
+        results
       );
       expect(value).toStrictEqual("wildcard-value");
     });
@@ -238,9 +241,9 @@ describe("matchBranchToEnvironmentVariable", () => {
       };
 
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(
-        results,
-        "!pr>release/1.0.0/feature/v1/feature/123/abc-123"
+      const value = getValueForBranch(
+        "!pr>release/1.0.0/feature/v1/feature/123/abc-123",
+        results
       );
       expect(value).toStrictEqual("glob-value");
     });
@@ -256,10 +259,10 @@ describe("matchBranchToEnvironmentVariable", () => {
 `,
       };
       const results = parseEnvVarPossibilities(envVars)[0][1];
-      const value = matchBranchToEnvironmentVariable(results, "master/abc");
-      const prValue = matchBranchToEnvironmentVariable(
-        results,
-        "!pr>pull/mypull"
+      const value = getValueForBranch("master/abc", results);
+      const prValue = getValueForBranch(
+        "!pr>pull/mypull",
+        results
       );
       expect(value).toStrictEqual("master-value");
       expect(prValue).toStrictEqual("pull-branch-value");
@@ -276,7 +279,7 @@ describe("matchBranchToEnvironmentVariable", () => {
       const results = parseEnvVarPossibilities(envVars)[0][1];
       expect(
         // matchBranchToEnvironmentVariable takes in the processed branch name, which would include !pr>.
-        matchBranchToEnvironmentVariable(results, "!pr>master")
+        getValueForBranch("!pr>master", results)
       ).toStrictEqual("master-value");
     });
 
@@ -292,7 +295,7 @@ describe("matchBranchToEnvironmentVariable", () => {
       const results = parseEnvVarPossibilities(envVars)[0][1];
       expect(
         // matchBranchToEnvironmentVariable takes in the processed branch name, which would include !pr>.
-        matchBranchToEnvironmentVariable(results, "!pr>branchX")
+        getValueForBranch( "!pr>branchX", results)
       ).toStrictEqual("baz");
     });
   });
@@ -306,7 +309,7 @@ describe("matchBranchToEnvironmentVariable", () => {
 `,
     };
     const results = parseEnvVarPossibilities(envVars)[0][1];
-    const value = matchBranchToEnvironmentVariable(results, "master");
+    const value = getValueForBranch("master", results);
     expect(value).toStrictEqual("master-value");
   });
 
@@ -319,7 +322,7 @@ describe("matchBranchToEnvironmentVariable", () => {
 `,
     };
     const results = parseEnvVarPossibilities(envVars)[0][1];
-    const value = matchBranchToEnvironmentVariable(results, "!pr");
+    const value = getValueForBranch("!pr", results);
     expect(value).toStrictEqual("pr-value");
   });
 });
