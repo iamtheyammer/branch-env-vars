@@ -21,6 +21,8 @@ jobs:
           TESTVAR1: mystaticvalue
           TESTVAR2: |
             master:master-value
+            !pr:pr-value
+            !tag:tag-value
             !default:default-value
           TESTVAR3: |
             !pr>master:pr-master-value
