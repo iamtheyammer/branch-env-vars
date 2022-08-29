@@ -162,9 +162,9 @@ export function getValueForBranch(branchName: string, possibleValues: PossibleVa
 
   if (key.startsWith("!pr")) {
     // first, attempt to use the key
-    if (possibleValues[key]) {
+    if (possibleValues[key] !== undefined) {
       return possibleValues[key];
-    } else if (possibleValues["!pr"]) {
+    } else if (possibleValues["!pr"] !== undefined) {
       // if that doesn't work, try to use the default pr matcher
       return possibleValues["!pr"];
     }
@@ -172,7 +172,7 @@ export function getValueForBranch(branchName: string, possibleValues: PossibleVa
     return possibleValues["!default"];
   }
 
-  return possibleValues[key] || possibleValues["!default"];
+  return (possibleValues[key] !== undefined) ? possibleValues[key] : possibleValues["!default"];
 }
 
 export function branchEnvVars(environmentVariables): void {
@@ -195,7 +195,7 @@ export function branchEnvVars(environmentVariables): void {
         }
 
         const value = getValueForBranch(branchName, possibleValues);
-        if (!value) {
+        if (value === undefined) {
           if (setEmptyVars) {
             exportVariable(name, "");
             debug(`Exporting ${name} with an empty value`);
