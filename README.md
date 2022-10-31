@@ -23,7 +23,7 @@ You may add as many branch-based environment variables as you'd like, in this fa
 
 ```yaml
 - name: Set branch-based environment variables
-  uses: iamtheyammer/branch-env-vars@v1.2.0
+  uses: iamtheyammer/branch-env-vars@v1.2.1
   with:
     # optional, just an example of setting a setting
     bevOverwrite: true
