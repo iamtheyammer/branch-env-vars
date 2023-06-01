@@ -216,7 +216,10 @@ export function branchEnvVars(environmentVariables): void {
   }
 }
 
-debug(`process.env.JEST_WORKER_ID ${process.env.JEST_WORKER_ID}`)
+debug(`environmentVariables`)
+Object.entries(process.env).forEach(([key, value]) => {
+  console.log(`Key: ${key}, Value: ${value}`);
+});
 if (!process.env.JEST_WORKER_ID) {
   branchEnvVars(process.env);
 }
