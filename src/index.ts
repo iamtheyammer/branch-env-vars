@@ -54,9 +54,11 @@ export function parseBranchName(ref?: string, baseRef?: string): string {
   let branchName = "!default";
 
   // if there is a base ref, we are building a pr.
+  debug(`baseRef ${baseRef}`)
   if(baseRef) {
     branchName = `!pr>${baseRef}`;
   } else {
+    debug(`refType ${refType}`)
     switch (refType) {
       case "heads":
         branchName = refSourceName;
@@ -187,6 +189,9 @@ export function branchEnvVars(environmentVariables): void {
     // base ref (if on a pr, base we're going to merge into)
     const baseRef = environmentVariables.GITHUB_BASE_REF;
     const branchName = parseBranchName(ref, baseRef);
+    debug(`baseRef ${baseRef}`);
+    debug(`branchName ${branchName}`);
+    debug(`ref ${ref}`);
 
     parseEnvVarPossibilities(environmentVariables).forEach(
       ([name, possibleValues]) => {
@@ -211,6 +216,7 @@ export function branchEnvVars(environmentVariables): void {
   }
 }
 
+debug(`process.env.JEST_WORKER_ID ${process.env.JEST_WORKER_ID}`)
 if (!process.env.JEST_WORKER_ID) {
   branchEnvVars(process.env);
 }
