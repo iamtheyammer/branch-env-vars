@@ -76,6 +76,7 @@ describe("parseEnvVarPossibilities", () => {
       !pr:pr-value
       !pr>basebranch:pr-basebranch-value
       !pr>basebranch/*:pr-basebranch-wildcard-value
+      !pr>emptyvalue:
       !tag:tag-value
       !default:default-value
 `,
@@ -99,6 +100,7 @@ describe("parseEnvVarPossibilities", () => {
     expect(results["!pr>basebranch/*"]).toStrictEqual(
       "pr-basebranch-wildcard-value"
     );
+    expect(results["!pr>emptyvalue"]).toStrictEqual("");
     expect(results["!tag"]).toStrictEqual("tag-value");
     expect(results["!default"]).toStrictEqual("default-value");
   });
@@ -313,9 +315,25 @@ describe("getValueForBranch", () => {
     expect(value).toStrictEqual("master-value");
   });
 
+  test("normal empty value keys work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      master:
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value1 = getValueForBranch("master", results);
+    expect(value1).toStrictEqual("");
+    const value2 = getValueForBranch("nonexistent", results);
+    expect(value2).toStrictEqual("default-value");
+  });
+
   test("normal pr keys work", () => {
     const envVars = {
       INPUT_TESTENVVAR: `
+      !pr>emptyvalue:
       !pr:pr-value
 
       !default:default-value
@@ -325,6 +343,69 @@ describe("getValueForBranch", () => {
     const value = getValueForBranch("!pr", results);
     expect(value).toStrictEqual("pr-value");
   });
+
+  test("empty default pr values work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      !pr>emptyvalue:pr-emptyvalue
+      !pr:
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value1 = getValueForBranch("!pr>emptyvalue", results);
+    expect(value1).toStrictEqual("pr-emptyvalue");
+    const value2 = getValueForBranch("!pr>nonexistent", results);
+    expect(value2).toStrictEqual("");
+    const value3 = getValueForBranch("!pr", results);
+    expect(value3).toStrictEqual("");
+    const value4 = getValueForBranch("nonexistent", results);
+    expect(value4).toStrictEqual("default-value");
+  });
+
+  test("empty specific pr values work", () => {
+    const envVars = {
+      INPUT_TESTENVVAR: `
+      !pr>emptyvalue:
+      !pr:pr-value
+
+      !default:default-value
+`,
+    };
+    const results = parseEnvVarPossibilities(envVars)[0][1];
+    const value1 = getValueForBranch("!pr>emptyvalue", results);
+    expect(value1).toStrictEqual("");
+    const value2 = getValueForBranch("!pr>nonexistent", results);
+    expect(value2).toStrictEqual("pr-value");
+    const value3 = getValueForBranch("!pr", results);
+    expect(value3).toStrictEqual("pr-value");
+    const value4 = getValueForBranch("nonexistent", results);
+    expect(value4).toStrictEqual("default-value");
+  });
+});
+
+test("empty default values work", () => {
+  const envVars = {
+    INPUT_TESTENVVAR: `
+    !pr>emptyvalue:pr-emptyvalue
+    !pr:pr-value
+    master:master-value
+
+    !default:
+`,
+  };
+  const results = parseEnvVarPossibilities(envVars)[0][1];
+  const value1 = getValueForBranch("!pr>emptyvalue", results);
+  expect(value1).toStrictEqual("pr-emptyvalue");
+  const value2 = getValueForBranch("!pr>nonexistent", results);
+  expect(value2).toStrictEqual("pr-value");
+  const value3 = getValueForBranch("!pr", results);
+  expect(value3).toStrictEqual("pr-value");
+  const value4 = getValueForBranch("master", results);
+  expect(value4).toStrictEqual("master-value");
+  const value5 = getValueForBranch("nonexistent", results);
+  expect(value5).toStrictEqual("");
 });
 
 describe("integration tests", () => {
